@@ -25,12 +25,22 @@ export default async function handler(
     return;
   }
 
-  const upstream = await fetch(`${CDN}/${path}`, {
-    headers: { Referer: "https://cardkaizoku.com/" },
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${CDN}/${path}`, {
+      headers: { Referer: "https://cardkaizoku.com/" },
+      redirect: "manual", // don't follow the CDN elsewhere (SSRF defense-in-depth)
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    res.statusCode = 504;
+    res.end("Upstream unavailable");
+    return;
+  }
 
   if (!upstream.ok) {
-    res.statusCode = upstream.status;
+    // Includes 3xx (opaque redirect) and 4xx; never echo a 0/odd status.
+    res.statusCode = upstream.status >= 400 ? upstream.status : 502;
     res.end("Image not found");
     return;
   }
