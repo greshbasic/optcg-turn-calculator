@@ -35,10 +35,10 @@ export default async function handler(
     return;
   }
 
-  const buf = Buffer.from(await upstream.arrayBuffer());
+  const body = new Uint8Array(await upstream.arrayBuffer());
   res.statusCode = 200;
   res.setHeader("Content-Type", upstream.headers.get("Content-Type") ?? "image/png");
   // 1 day in-browser, 30 days on Vercel's edge cache (shared across visitors).
   res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=2592000, immutable");
-  res.end(buf);
+  res.end(body);
 }
