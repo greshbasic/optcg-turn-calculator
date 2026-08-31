@@ -39,10 +39,16 @@ interface Props {
   size?: number;
 }
 
+// Session memo: leaderKey -> the candidate index that resolved (or urls.length
+// if all failed → initials chip). Thumbnails remount whenever the search list
+// re-filters; without this each remount would re-walk the whole fallback chain
+// and re-request the CDN's un-cacheable 404s. Starting from the remembered
+// index avoids that entirely.
+const resolvedIndex = new Map<string, number>();
+
 export function LeaderThumb({ leaderKey, name, size = 28 }: Props) {
   const urls = imageUrls(leaderKey);
-  // Index of the current candidate URL; advance on error until we run out.
-  const [srcIndex, setSrcIndex] = useState(0);
+  const [srcIndex, setSrcIndex] = useState(() => resolvedIndex.get(leaderKey) ?? 0);
   const style = { width: size, height: size } as const;
   const failed = srcIndex >= urls.length;
 
@@ -72,7 +78,14 @@ export function LeaderThumb({ leaderKey, name, size = 28 }: Props) {
       alt=""
       loading="lazy"
       referrerPolicy="no-referrer"
-      onError={() => setSrcIndex((i) => i + 1)}
+      onLoad={() => resolvedIndex.set(leaderKey, srcIndex)}
+      onError={() =>
+        setSrcIndex((i) => {
+          const next = i + 1;
+          resolvedIndex.set(leaderKey, next); // remember (incl. urls.length = chip)
+          return next;
+        })
+      }
     />
   );
 }
