@@ -32,6 +32,8 @@ export function MatchupResult({ data }: { data: MatchupResultData }) {
         {HEADLINE[recommendation]}
       </div>
 
+      <div className="result__raw">Raw win rate: {pct(data.rawWinRate)}</div>
+
       <div className="result__rates">
         <div className={"result__rate" + (firstWins ? " is-winner" : "")}>
           <span className="result__rate-label">First</span>

@@ -51,5 +51,6 @@ export interface MatchupResultData {
   secondWinRate: number | null;
   firstGames: number;
   secondGames: number;
+  rawWinRate: number;
   recommendation: Recommendation;
 }

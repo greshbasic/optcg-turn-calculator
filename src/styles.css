@@ -337,6 +337,13 @@ body {
   font-size: clamp(24px, 7vw, 40px);
 }
 
+.result__raw {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: -14px;
+  margin-bottom: 22px;
+}
+
 .result__rates {
   display: grid;
   grid-template-columns: 1fr 1fr;

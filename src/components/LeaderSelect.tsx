@@ -101,7 +101,10 @@ export function LeaderSelect({ label, options, value, onChange, placeholder }: P
       </div>
       {open && (
         <ul className="leader-select__list" id={`${label}-listbox`} role="listbox">
-          {filtered.length === 0 && (
+          {filtered.length === 0 && options.length === 0 && (
+            <li className="leader-select__empty">{placeholder ?? "No leaders available."}</li>
+          )}
+          {filtered.length === 0 && options.length > 0 && (
             <li className="leader-select__empty">No leaders match “{query}”.</li>
           )}
           {filtered.map((o, i) => (

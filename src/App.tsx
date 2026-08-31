@@ -114,6 +114,7 @@ export default function App() {
       secondWinRate: matchup.second_win_rate,
       firstGames: matchup.first_games,
       secondGames: matchup.second_games,
+      rawWinRate: matchup.matchup_win_rate,
       recommendation: recommend(matchup.first_win_rate, matchup.second_win_rate),
     });
   }
