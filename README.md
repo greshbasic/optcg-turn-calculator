@@ -154,9 +154,10 @@ require CORS). `LeaderThumb.tsx` tries two paths, then a fallback:
 
 Path #2 is proxied because the CDN's WAF only serves `/cards_en/` images when the
 request carries a `cardkaizoku.com` `Referer` — which a browser `<img>` from our
-own origin can't send. The proxy (`api/img/[...path].ts` on Vercel,
-`vite.config.ts` in dev) fetches server-side with that header and streams the
-image back.
+own origin can't send. The proxy (`api/img/[...path].ts`, a Vercel **Node**
+serverless function; `vite.config.ts` in dev) fetches server-side with that
+header and returns the image. (It must be the Node runtime, not Edge — Edge's
+spec-compliant fetch strips the forbidden `Referer` header.)
 
 ### Caching (why it's not "100+ images every time")
 
@@ -181,7 +182,7 @@ image back.
 
 ```
 api/
-  img/[...path].ts      # Vercel edge proxy for referer-gated CDN images
+  img/[...path].ts      # Vercel Node proxy for referer-gated CDN images
 src/
   components/
     LeaderSelect.tsx    # searchable dropdown (keyboard + mouse)
