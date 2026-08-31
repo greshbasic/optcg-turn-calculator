@@ -15,9 +15,9 @@ function imageUrls(leaderKey: string): string[] {
     //    but the <img> below sends none (referrerPolicy="no-referrer"), which
     //    the CDN allows — same as opening the URL directly in a browser.
     `https://cdn.cardkaizoku.com/cards_en/${set}/${key}.png`,
-    // 3) Last resort: our server-side proxy (spoofs the Referer). Only reached
-    //    if #2 is blocked; harmless 404 if the proxy function isn't deployed.
-    `/api/img/cards_en/${set}/${key}.png`,
+    // 3) Last resort: our server-side proxy (spoofs the Referer). Path goes in a
+    //    query param so Vercel routes it to the function, not the static layer.
+    `/api/img?p=${encodeURIComponent(`cards_en/${setOf(leaderKey)}/${leaderKey}.png`)}`,
   ];
 }
 
