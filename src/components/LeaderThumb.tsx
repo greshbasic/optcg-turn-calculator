@@ -9,8 +9,10 @@ const setOf = (leaderKey: string) => leaderKey.slice(0, leaderKey.indexOf("-"));
 function imageUrls(leaderKey: string): string[] {
   const key = encodeURIComponent(leaderKey);
   return [
+    // Primary path isn't WAF-gated, so load it straight from the CDN edge.
     `https://cdn.cardkaizoku.com/images/leaders/${key}.png`,
-    `https://cdn.cardkaizoku.com/cards_en/${encodeURIComponent(setOf(leaderKey))}/${key}.png`,
+    // Full-card fallback is Referer-gated; route it through our proxy.
+    `/api/img/cards_en/${encodeURIComponent(setOf(leaderKey))}/${key}.png`,
   ];
 }
 

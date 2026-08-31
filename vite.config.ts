@@ -14,6 +14,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/stats/, "/stats"),
       },
+      // Mirrors the api/img edge function for local dev: the CDN's WAF requires
+      // a cardkaizoku.com Referer for /cards_en/ images.
+      "/api/img": {
+        target: "https://cdn.cardkaizoku.com",
+        changeOrigin: true,
+        headers: { Referer: "https://cardkaizoku.com/" },
+        rewrite: (path) => path.replace(/^\/api\/img/, ""),
+      },
     },
   },
   test: {

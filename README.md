@@ -147,13 +147,25 @@ dropdowns and result show thumbnails (loaded directly via `<img>`, which doesn't
 require CORS). `LeaderThumb.tsx` tries two paths, then a fallback:
 
 1. `https://cdn.cardkaizoku.com/images/leaders/{leaderKey}.png` — cropped leader
-   art (covers ~102 of 119 leaders).
-2. `https://cdn.cardkaizoku.com/cards_en/{SET}/{leaderKey}.png` — full-card art
-   for the rest (mostly the newest OP17/OP18/PRB01/EB01 cards and some promos).
+   art, loaded straight from the CDN (covers ~102 of 119 leaders).
+2. `/api/img/cards_en/{SET}/{leaderKey}.png` — full-card art for the rest (mostly
+   the newest OP17/OP18/PRB01/EB01 cards and some promos), via our proxy.
 3. If neither loads, a colored initials chip.
 
-(The CDN's WAF blocks non-browser requests to path #2, but real `<img>` loads from
-a browser succeed.)
+Path #2 is proxied because the CDN's WAF only serves `/cards_en/` images when the
+request carries a `cardkaizoku.com` `Referer` — which a browser `<img>` from our
+own origin can't send. The proxy (`api/img/[...path].ts` on Vercel,
+`vite.config.ts` in dev) fetches server-side with that header and streams the
+image back.
+
+### Caching (why it's not "100+ images every time")
+
+- Only **visible** thumbnails load, thanks to `loading="lazy"` on each `<img>`.
+- The CDN already marks images `Cache-Control: public` (≈1h primary, ≈24h
+  fallback), so the browser serves repeat views from its own cache — no refetch.
+- The proxied images get a stronger `Cache-Control: public, max-age=86400,
+  s-maxage=2592000, immutable`, so Vercel's edge caches them for ~30 days across
+  all visitors and the origin is hit at most once per image.
 
 ## Handled edge cases
 
@@ -168,16 +180,22 @@ a browser succeed.)
 ## Project structure
 
 ```
+api/
+  img/[...path].ts      # Vercel edge proxy for referer-gated CDN images
 src/
   components/
     LeaderSelect.tsx    # searchable dropdown (keyboard + mouse)
+    LeaderThumb.tsx     # leader art with two-path + initials fallback
     MatchupResult.tsx   # prominent recommendation + win rates
+  lib/
+    recommend.ts        # first/second recommendation logic (unit-tested)
   services/
-    statsApi.ts         # fetch + runtime validation
+    statsApi.ts         # fetch, dynamic date, runtime validation
   types/
     stats.ts            # API + view-model types
-  App.tsx               # state, lookup, recommendation logic
+  App.tsx               # state, lookup, wiring
   main.tsx
   styles.css
-vite.config.ts          # CORS proxy
+vite.config.ts          # dev proxy (stats + images) + vitest config
+vercel.json             # prod /api/stats rewrite
 ```
