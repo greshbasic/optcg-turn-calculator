@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { LeaderSelect } from "./components/LeaderSelect";
 import { MatchupResult } from "./components/MatchupResult";
+import { TopLeaders } from "./components/TopLeaders";
 import { fetchStats, StatsError } from "./services/statsApi";
 import { recommend } from "./lib/recommend";
 import type { LeaderOption, MatchupResultData, Stats } from "./types/stats";
+
+type View = "calculator" | "top-leaders";
 
 type LoadState =
   | { status: "loading" }
@@ -23,6 +26,7 @@ function formatSnapshotDate(yyyymmdd: string): string {
 
 export default function App() {
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
+  const [view, setView] = useState<View>("calculator");
   const [myLeader, setMyLeader] = useState<string | null>(null);
   const [opponent, setOpponent] = useState<string | null>(null);
   const [result, setResult] = useState<MatchupResultData | null>(null);
@@ -128,6 +132,11 @@ export default function App() {
         <p className="app__subtitle">
           One Piece TCG turn-order recommendations from live matchup win rates.
         </p>
+        {load.status === "ready" && view === "calculator" && (
+          <button className="btn btn--top-leaders" onClick={() => setView("top-leaders")}>
+            🏆 Top 10 Leaders
+          </button>
+        )}
       </header>
 
       {load.status === "loading" && (
@@ -144,7 +153,11 @@ export default function App() {
         </div>
       )}
 
-      {load.status === "ready" && (
+      {load.status === "ready" && view === "top-leaders" && (
+        <TopLeaders stats={load.stats} onBack={() => setView("calculator")} />
+      )}
+
+      {load.status === "ready" && view === "calculator" && (
         <main className="app__main">
           <div className="controls">
             <LeaderSelect
