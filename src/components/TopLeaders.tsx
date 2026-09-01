@@ -5,7 +5,7 @@ const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
 export function TopLeaders({ stats, onBack }: { stats: Stats; onBack: () => void }) {
   const top10 = [...stats]
-    .sort((a, b) => b.play_rate - a.play_rate)
+    .sort((a, b) => b.weighted_win_rate - a.weighted_win_rate)
     .slice(0, 10);
 
   return (
@@ -22,12 +22,12 @@ export function TopLeaders({ stats, onBack }: { stats: Stats; onBack: () => void
             <span className="top-leaders__name">{leader.leaderName}</span>
             <span className="top-leaders__stats">
               <span className="top-leaders__stat">
-                <span className="top-leaders__stat-label">Play rate</span>
-                <span className="top-leaders__stat-value">{pct(leader.play_rate)}</span>
+                <span className="top-leaders__stat-label">Wtd WR</span>
+                <span className="top-leaders__stat-value">{pct(leader.weighted_win_rate)}</span>
               </span>
               <span className="top-leaders__stat">
-                <span className="top-leaders__stat-label">Win rate</span>
-                <span className="top-leaders__stat-value">{pct(leader.raw_win_rate)}</span>
+                <span className="top-leaders__stat-label">Play rate</span>
+                <span className="top-leaders__stat-value">{pct(leader.play_rate)}</span>
               </span>
             </span>
           </li>
