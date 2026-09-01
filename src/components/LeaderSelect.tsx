@@ -89,6 +89,10 @@ export function LeaderSelect({ label, options, value, onChange, placeholder }: P
           aria-controls={`${label}-listbox`}
           value={open ? query : selected?.name ?? ""}
           placeholder={selected ? selected.name : placeholder ?? "Search leader…"}
+          spellCheck={false}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           onChange={(e) => {
             setQuery(e.target.value);
             if (!open) setOpen(true);

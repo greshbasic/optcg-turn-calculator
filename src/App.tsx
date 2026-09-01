@@ -4,6 +4,7 @@ import { MatchupResult } from "./components/MatchupResult";
 import { TopLeaders } from "./components/TopLeaders";
 import { fetchStats, StatsError } from "./services/statsApi";
 import { recommend } from "./lib/recommend";
+import { sortByPlayRate } from "./lib/sortOptions";
 import type { LeaderOption, MatchupResultData, Stats } from "./types/stats";
 
 type View = "calculator" | "top-leaders";
@@ -61,24 +62,37 @@ export default function App() {
     return map;
   }, [stats]);
 
-  // "Your leader" options: every top-level leader that has matchup data.
-  const myOptions: LeaderOption[] = useMemo(() => {
-    if (!stats) return [];
-    return stats
-      .map((l) => ({ id: l.leaderKey, name: l.leaderName }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+  const playRateByKey = useMemo(() => {
+    const map = new Map<string, number>();
+    stats?.forEach((l) => map.set(l.leaderKey, l.play_rate));
+    return map;
   }, [stats]);
 
+  // "Your leader" options: every top-level leader that has matchup data,
+  // most-played first.
+  const myOptions: LeaderOption[] = useMemo(() => {
+    if (!stats) return [];
+    return sortByPlayRate(
+      stats.map((l) => ({ id: l.leaderKey, name: l.leaderName })),
+      playRateByKey
+    );
+  }, [stats, playRateByKey]);
+
   // Opponent options depend on the selected leader: only opponents that
-  // actually appear in that leader's matchups can be analyzed.
+  // actually appear in that leader's matchups can be analyzed. Sorted by
+  // overall play rate so the most common opponents show up first.
   const opponentOptions: LeaderOption[] = useMemo(() => {
     if (!stats || !myLeader) return [];
     const leader = stats.find((l) => l.leaderKey === myLeader);
     if (!leader) return [];
-    return leader.matchups
-      .map((m) => ({ id: m.opponentKey, name: nameByKey.get(m.opponentKey) ?? m.opponent }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [stats, myLeader, nameByKey]);
+    return sortByPlayRate(
+      leader.matchups.map((m) => ({
+        id: m.opponentKey,
+        name: nameByKey.get(m.opponentKey) ?? m.opponent,
+      })),
+      playRateByKey
+    );
+  }, [stats, myLeader, nameByKey, playRateByKey]);
 
   function handleMyLeaderChange(id: string) {
     setMyLeader(id);
