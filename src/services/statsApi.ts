@@ -49,19 +49,25 @@ function isMatchup(x: unknown): x is Matchup {
   );
 }
 
-function isLeaderStats(x: unknown): x is LeaderStats {
+// leaderName is occasionally null upstream (e.g. unnamed promo leaders like
+// P-999) — accept it here and fall back to the leaderKey when normalizing.
+function isLeaderStats(x: unknown): x is Omit<LeaderStats, "leaderName"> & { leaderName: string | null } {
   if (typeof x !== "object" || x === null) return false;
   const l = x as Record<string, unknown>;
   return (
     typeof l.leaderKey === "string" &&
-    typeof l.leaderName === "string" &&
+    (typeof l.leaderName === "string" || l.leaderName === null) &&
     Array.isArray(l.matchups) &&
     l.matchups.every(isMatchup)
   );
 }
 
-function isStats(x: unknown): x is Stats {
+function isStats(x: unknown): x is (Omit<LeaderStats, "leaderName"> & { leaderName: string | null })[] {
   return Array.isArray(x) && x.every(isLeaderStats);
+}
+
+function normalizeStats(raw: (Omit<LeaderStats, "leaderName"> & { leaderName: string | null })[]): Stats {
+  return raw.map((l) => ({ ...l, leaderName: l.leaderName ?? l.leaderKey }));
 }
 
 export async function fetchStats(): Promise<StatsResult> {
@@ -95,7 +101,7 @@ export async function fetchStats(): Promise<StatsResult> {
       throw new StatsError("Stats data did not match the expected format.");
     }
 
-    return { stats: data, date };
+    return { stats: normalizeStats(data), date };
   }
 
   throw new StatsError(
